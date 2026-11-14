@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from . import data as D
 from . import metrics as M
 from .model import build_model, eval_transform
-from .train import ImageListDataset
+from .train import ImageListDataset, pick_device
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
     ap.add_argument("--batch-size", type=int, default=64)
     args = ap.parse_args()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = pick_device()
     ckpt = torch.load(args.checkpoint, map_location=device)
     classes = ckpt["classes"]
     model = build_model(len(classes), pretrained=False)

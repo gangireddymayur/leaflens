@@ -40,6 +40,17 @@ python -m plantdx.train --data-dir /path/to/plantvillage --mode finetune --epoch
 python -m plantdx.export_onnx --checkpoint runs/finetune/best.pt --out-dir model --quantize
 ```
 
+## Run it on a Mac (Apple GPU)
+
+PyTorch does not support Python 3.14 yet, so use Python 3.11 or 3.12. The code picks the best device automatically: CUDA on Kaggle, the Apple GPU (MPS) on a Mac, otherwise CPU.
+
+```bash
+pip install uv
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -r requirements.txt
+PYTHONPATH=src .venv/bin/python -m plantdx.train --data-dir /path/to/plantvillage --mode linear --epochs 3
+```
+
 ## Tests
 
 ```bash
@@ -67,7 +78,8 @@ The data splitting and metrics code is unit-tested and runs in CI without a GPU.
 
 - [x] Data scanning, stratified split, metrics (unit-tested)
 - [x] Training script with baseline and fine-tune modes
-- [x] ONNX export with parity check
+- [x] ONNX export with parity check (single self-contained file)
+- [x] Smoke-tested end to end on a tiny synthetic dataset (code path only; no real results yet)
 - [ ] Run on Kaggle and fill in the results table
 - [ ] Real-world evaluation and error analysis
 - [ ] Model card

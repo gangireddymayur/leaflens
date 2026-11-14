@@ -34,6 +34,15 @@ class ImageListDataset(Dataset):
             return self.transform(img.convert("RGB")), label
 
 
+def pick_device():
+    """CUDA on Kaggle, the Apple GPU (MPS) on a Mac, otherwise CPU."""
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -91,7 +100,7 @@ def main():
     args = ap.parse_args()
 
     set_seed(args.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = pick_device()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 

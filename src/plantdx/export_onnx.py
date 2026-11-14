@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import onnx
 import onnxruntime as ort
 import torch
 
@@ -39,6 +40,11 @@ def main():
     )
     (out / "labels.json").write_text(json.dumps(classes, indent=2))
 
+    # Newer PyTorch writes the weights to a separate .data file. Embed them so the app
+    # only has to load one self-contained file, and so the size we report is the real size.
+    onnx.save_model(onnx.load(str(onnx_path)), str(onnx_path), save_as_external_data=False)
+    (out / "plant_model.onnx.data").unlink(missing_ok=True)
+
     # Parity check on random inputs: the exported graph must agree with PyTorch.
     session = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
     batch = torch.randn(8, 3, IMAGE_SIZE, IMAGE_SIZE)
@@ -57,7 +63,7 @@ def main():
         q_got = q_session.run(None, {"input": batch.numpy()})[0]
         report["int8_mb"] = round(q_path.stat().st_size / 1e6, 2)
         report["int8_top1_agreement_with_fp32"] = float((expected.argmax(1) == q_got.argmax(1)).mean())
-        report["note"] = "Re-run evaluation on real images before trusting the int8 model."
+        report["note"] = "Agreement is measured on random inputs. Re-run evaluation on real images before trusting the int8 model."
 
     (out / "export_report.json").write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
