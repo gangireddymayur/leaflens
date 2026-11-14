@@ -63,10 +63,12 @@ The data splitting and metrics code is unit-tested and runs in CI without a GPU.
 
 | Model | Test accuracy | Test macro-F1 | Size | Notes |
 |---|---|---|---|---|
-| Linear baseline | _to be filled from my run_ | | | |
-| Fine-tuned | _to be filled from my run_ | | | |
-| Fine-tuned, int8 | _to be filled from my run_ | | | |
-| Fine-tuned on real phone photos | _to be filled from my run_ | | | the number that matters most |
+| Linear baseline (3 epochs, frozen backbone) | 97.45% | 96.23% | 17.3 MB (fp32 ONNX) | 4.3 min on an Apple M5 Pro GPU |
+| Fine-tuned (8 epochs, all layers) | 99.78% | 99.58% | 17.3 MB (fp32 ONNX) | 23.5 min on an Apple M5 Pro GPU |
+| Fine-tuned, int8 | not yet evaluated on real images | | about 4.5 MB | quantised copy exists; agreement with fp32 still to be measured |
+| Fine-tuned on real phone photos | not yet measured | | | the number that matters most |
+
+Test split: 8,146 images (15%), never used for training or model selection. Seed 42.
 
 ## Known limits (written before the results, on purpose)
 

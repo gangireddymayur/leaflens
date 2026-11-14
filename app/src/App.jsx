@@ -92,7 +92,12 @@ function Home({ onPick, onSample, modelState }) {
         </div>
       </section>
 
-      <p className="footnote">Model: MobileNetV3-Large · 38 conditions · 14 crops</p>
+      <footer className="footnote">
+        <span>Model: MobileNetV3-Large · 38 conditions · 14 crops</span>
+        <span>Trained on the PlantVillage dataset</span>
+        <span className="credit">Designed and developed by <b>Mayur Gangireddy</b></span>
+        <span>© 2026 Mayur Gangireddy. All rights reserved.</span>
+      </footer>
     </motion.main>
   );
 }

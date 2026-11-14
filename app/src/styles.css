@@ -193,3 +193,8 @@ h2 { margin: 4px 0 0; font-size: 28px; line-height: 1.1; letter-spacing: -0.025e
 .btn { min-height: 56px; }
 .screen { padding-bottom: calc(var(--safe-bottom) + 28px); }
 .photo.small { height: 220px; }
+
+/* Credits */
+.footnote { display: flex; flex-direction: column; align-items: center; gap: 4px; line-height: 1.4; }
+.footnote .credit { margin-top: 6px; color: var(--text); opacity: 0.9; }
+.footnote .credit b { font-weight: 650; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
