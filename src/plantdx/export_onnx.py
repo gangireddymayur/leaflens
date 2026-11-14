@@ -42,7 +42,13 @@ def main():
 
     # Newer PyTorch writes the weights to a separate .data file. Embed them so the app
     # only has to load one self-contained file, and so the size we report is the real size.
-    onnx.save_model(onnx.load(str(onnx_path)), str(onnx_path), save_as_external_data=False)
+    model_proto = onnx.load(str(onnx_path))
+    # The exporter records Python stack traces (with local file paths) on every node. Drop them
+    # so the file is smaller and does not leak the machine it was built on.
+    for node in model_proto.graph.node:
+        del node.metadata_props[:]
+    del model_proto.metadata_props[:]
+    onnx.save_model(model_proto, str(onnx_path), save_as_external_data=False)
     (out / "plant_model.onnx.data").unlink(missing_ok=True)
 
     # Parity check on random inputs: the exported graph must agree with PyTorch.

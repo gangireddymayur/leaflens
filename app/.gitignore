@@ -5,3 +5,4 @@ public/ort
 
 build
 *.onnx
+!public/model/plant_model.onnx

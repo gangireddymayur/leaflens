@@ -7,3 +7,6 @@ data/
 *.onnx
 .DS_Store
 .ipynb_checkpoints/
+
+# the one model the app ships with
+!app/public/model/plant_model.onnx

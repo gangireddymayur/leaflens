@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>LeafLens uses the camera to photograph a leaf. The photo is analyzed on your device and never uploaded.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>LeafLens can save a leaf photo you take so you can find it later. Nothing is uploaded.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LeafLens lets you pick a leaf photo to analyze. It stays on your device.</string>
 	<key>UIApplicationSceneManifest</key>

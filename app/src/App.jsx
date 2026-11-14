@@ -4,7 +4,7 @@ import { Camera, Image as ImageIcon, Leaf, ShieldCheck, WifiOff, Cpu, RotateCcw,
 import { classify, loadModel } from './lib/classifier.js';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
-import { takePhoto } from './lib/capture.js';
+import { askPermission, deniedMessage, friendlyError, getPermission, takePhoto } from './lib/capture.js';
 import { HEALTHY_TIPS, knowledgeFor } from './lib/knowledge.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -47,6 +47,32 @@ function TopBar({ title, onBack }) {
       <span className="topbar-title">{title}</span>
       <span className="topbar-spacer" />
     </header>
+  );
+}
+
+
+function PermissionSheet({ source, onAllow, onClose }) {
+  const camera = source === 'camera';
+  const Icon = camera ? Camera : ImageIcon;
+  return (
+    <motion.div className="sheet-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <motion.div
+        className="sheet" role="dialog" aria-modal="true"
+        initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} transition={spring}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sheet-icon"><Icon size={28} strokeWidth={2.2} /></div>
+        <h3>{camera ? 'Allow camera access?' : 'Allow photo access?'}</h3>
+        <p>
+          {camera
+            ? 'LeafLens uses your camera to photograph a leaf. The photo is analyzed on your phone and is never uploaded.'
+            : 'LeafLens lets you pick a leaf photo from your library. It is analyzed on your phone and is never uploaded.'}
+        </p>
+        <button className="btn primary" onClick={onAllow}>Continue</button>
+        <button className="btn ghost" onClick={onClose}>Not now</button>
+        <span className="sheet-note"><ShieldCheck size={13} /> Your phone will ask you to confirm next.</span>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -261,13 +287,44 @@ export default function App() {
     return () => { handle.then((h) => h.remove()); };
   }, [goHome]);
 
-  const pick = useCallback(async (source) => {
+  const [permAsk, setPermAsk] = useState(null); // 'camera' | 'photos' | null
+
+  // Messages fade away on their own.
+  useEffect(() => {
+    if (!error) return undefined;
+    const t = setTimeout(() => setError(null), 6000);
+    return () => clearTimeout(t);
+  }, [error]);
+
+  const capture = useCallback(async (source) => {
     try {
       run(await takePhoto(source));
     } catch (e) {
-      setError(e.message ?? 'Could not open the camera.');
+      setError(friendlyError(e, source));
     }
   }, [run]);
+
+  const pick = useCallback(async (source) => {
+    try {
+      const state = await getPermission(source);
+      if (state === 'denied') return setError(deniedMessage(source));
+      if (state === 'prompt') return setPermAsk(source); // explain first, then the system dialog
+      return capture(source);
+    } catch (e) {
+      return setError(friendlyError(e, source));
+    }
+  }, [capture]);
+
+  const allow = useCallback(async () => {
+    const source = permAsk;
+    setPermAsk(null);
+    try {
+      if (await askPermission(source)) await capture(source);
+      else setError(deniedMessage(source));
+    } catch (e) {
+      setError(friendlyError(e, source));
+    }
+  }, [permAsk, capture]);
 
   return (
     <div className="app">
@@ -277,6 +334,9 @@ export default function App() {
         {screen === 'home' && <Home key="home" modelState={modelState} onPick={pick} onSample={run} />}
         {screen === 'analyzing' && <Analyzing key="analyzing" image={image} onBack={goHome} />}
         {screen === 'result' && result && <Result key="result" image={image} result={result} onReset={goHome} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {permAsk && <PermissionSheet key="perm" source={permAsk} onAllow={allow} onClose={() => setPermAsk(null)} />}
       </AnimatePresence>
       <AnimatePresence>
         {error && screen === 'home' && (

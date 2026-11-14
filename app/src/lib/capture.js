@@ -37,3 +37,36 @@ export async function takePhoto(source) {
     throw err;
   }
 }
+
+const KEY = { camera: 'camera', photos: 'photos' };
+const OK = new Set(['granted', 'limited']);
+
+// 'granted' | 'denied' | 'prompt'
+export async function getPermission(source) {
+  if (!Capacitor.isNativePlatform()) return 'granted';
+  const state = (await Camera.checkPermissions())[KEY[source]];
+  if (OK.has(state)) return 'granted';
+  return state === 'denied' ? 'denied' : 'prompt';
+}
+
+// Shows the system permission dialog. Returns true when access was granted.
+export async function askPermission(source) {
+  if (!Capacitor.isNativePlatform()) return true;
+  const result = await Camera.requestPermissions({ permissions: [KEY[source]] });
+  return OK.has(result[KEY[source]]);
+}
+
+export function friendlyError(err, source) {
+  const msg = String(err?.message ?? err ?? '');
+  if (/simulator|not available|no camera|unavailable/i.test(msg)) {
+    return 'No camera is available on this device (simulators do not have one). Try "Choose from photos" instead.';
+  }
+  if (/denied|permission/i.test(msg)) return deniedMessage(source);
+  return msg || 'Something went wrong. Please try again.';
+}
+
+export function deniedMessage(source) {
+  return source === 'camera'
+    ? 'Camera access is turned off. Open Settings, tap LeafLens and switch on Camera.'
+    : 'Photo access is turned off. Open Settings, tap LeafLens and allow Photos.';
+}

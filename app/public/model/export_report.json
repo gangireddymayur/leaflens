@@ -1,5 +1,5 @@
 {
-  "onnx_mb": 17.32,
-  "max_abs_diff": 3.0994415283203125e-06,
+  "onnx_mb": 17.03,
+  "max_abs_diff": 3.5762786865234375e-06,
   "top1_agreement": 1.0
 }
