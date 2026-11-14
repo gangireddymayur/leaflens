@@ -20,7 +20,9 @@
 <img src="docs/screenshots/ios-permission.jpg" width="19%" alt="Camera permission pop-up" />
 <img src="docs/screenshots/ios-result.jpg" width="19%" alt="Scan result" />
 <img src="docs/screenshots/ios-about.jpg" width="19%" alt="About this condition" />
-<img src="docs/screenshots/android-result.jpg" width="19%" alt="Android scan result" />
+<img src="docs/screenshots/android-healthy.jpg" width="19%" alt="Healthy leaf result on Android" />
+
+<sub>Home, permission pop-up, a disease result and its guidance (iPhone simulator), and a healthy-leaf result (Android emulator).</sub>
 
 </div>
 
