@@ -1,0 +1,34 @@
+[
+ {
+  "file": "tomato-early-blight.jpg",
+  "truth": "Tomato___Early_blight"
+ },
+ {
+  "file": "tomato-healthy.jpg",
+  "truth": "Tomato___healthy"
+ },
+ {
+  "file": "apple-apple-scab.jpg",
+  "truth": "Apple___Apple_scab"
+ },
+ {
+  "file": "grape-black-rot.jpg",
+  "truth": "Grape___Black_rot"
+ },
+ {
+  "file": "potato-late-blight.jpg",
+  "truth": "Potato___Late_blight"
+ },
+ {
+  "file": "corn-maize-common-rust.jpg",
+  "truth": "Corn_(maize)___Common_rust_"
+ },
+ {
+  "file": "strawberry-leaf-scorch.jpg",
+  "truth": "Strawberry___Leaf_scorch"
+ },
+ {
+  "file": "peach-bacterial-spot.jpg",
+  "truth": "Peach___Bacterial_spot"
+ }
+]

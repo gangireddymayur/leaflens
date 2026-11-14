@@ -103,6 +103,12 @@ def main():
     device = pick_device()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    log_file = open(out / "train.log", "a", buffering=1)
+
+    def log(msg):
+        """Print to the console and also save to runs/<name>/train.log."""
+        print(msg, flush=True)
+        log_file.write(msg + "\n")
 
     classes, items = D.scan_folder(D.find_data_root(args.data_dir))
     if args.limit_per_class:
@@ -121,7 +127,7 @@ def main():
         "test": [items[i][0] for i in te_idx],
     }))
     (out / "labels.json").write_text(json.dumps(classes, indent=2))
-    print(f"{len(classes)} classes, {len(tr_idx)} train / {len(va_idx)} val / {len(te_idx)} test, device={device}")
+    log(f"{len(classes)} classes | {len(tr_idx)} train / {len(va_idx)} val / {len(te_idx)} test images | device={device} | mode={args.mode} | epochs={args.epochs}")
 
     def loader(idx, tf, shuffle):
         ds = ImageListDataset([items[i] for i in idx], tf)
@@ -150,7 +156,9 @@ def main():
         if args.mode == "linear":
             model.features.eval()  # keep frozen batch-norm statistics fixed
         running, seen = 0.0, 0
-        for x, y in train_loader:
+        epoch_start = time.time()
+        n_batches = len(train_loader)
+        for b, (x, y) in enumerate(train_loader, start=1):
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast(device_type=device.type, enabled=use_amp):
@@ -160,11 +168,17 @@ def main():
             scaler.update()
             running += loss.item() * len(y)
             seen += len(y)
+            if b % 50 == 0 or b == n_batches:
+                elapsed = time.time() - epoch_start
+                eta = elapsed / b * (n_batches - b)
+                log(f"  epoch {epoch}/{args.epochs}  batch {b}/{n_batches}  loss {running / seen:.4f}  "
+                    f"elapsed {elapsed / 60:.1f} min  epoch ETA {eta / 60:.1f} min")
         scheduler.step()
         val, _ = run_eval(model, val_loader, device, len(classes), criterion)
         row = {"epoch": epoch, "train_loss": running / max(1, seen), **{f"val_{k}": v for k, v in val.items()}}
         history.append(row)
-        print(json.dumps(row))
+        log(f"EPOCH {epoch}/{args.epochs} done in {(time.time() - epoch_start) / 60:.1f} min | "
+            f"train_loss {row['train_loss']:.4f} | val_accuracy {val['accuracy']:.4f} | val_macro_f1 {val['macro_f1']:.4f}")
         if val["macro_f1"] > best_f1:
             best_f1 = val["macro_f1"]
             torch.save({"state_dict": model.state_dict(), "classes": classes, "mode": args.mode}, out / "best.pt")
@@ -186,7 +200,9 @@ def main():
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2))
     np.save(out / "confusion_matrix.npy", cm)
     save_confusion_png(cm, classes, out / "confusion_matrix.png")
-    print("TEST:", json.dumps(test))
+    log("TEST: " + json.dumps(test))
+    log(f"Saved to {out}/  (best.pt, metrics.json, confusion_matrix.png, train.log)")
+    log_file.close()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+{
+  "appId": "com.mayur.leaflens",
+  "appName": "LeafLens",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#06150e"
+  },
+  "android": {
+    "backgroundColor": "#06150e"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#0006150e"
+    }
+  }
+}

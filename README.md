@@ -89,3 +89,34 @@ The data splitting and metrics code is unit-tested and runs in CI without a GPU.
 ## Dataset
 
 PlantVillage (about 54,000 leaf images, 38 classes). See the original project at https://github.com/spMohanty/PlantVillage-Dataset. Check the licence of the copy you use.
+
+## The app: LeafLens (iOS and Android)
+
+`app/` is a Capacitor app (React, Vite) that runs the exported ONNX model **on the phone** with ONNX Runtime Web. No server and no upload: the photo is analysed locally and the app works offline.
+
+- **Scan:** camera or photo library, or one of 8 bundled sample leaves from the held-out test split.
+- **Result:** top prediction with confidence, the next two possibilities, and the inference time measured on the device.
+- **About this condition:** for each of the 26 diseases, the cause, how it spreads, what to look for and general management steps. It is general plant-health information, and every screen tells the user to confirm with a local agricultural officer.
+- **Honest limits:** below 60% confidence the app says it is not sure and shows no advice. A note on every result says the model only knows 38 conditions across 14 crops and was trained on lab photos.
+
+### Preprocessing parity
+
+The app resizes, crops and normalises photos in JavaScript. I checked it against the Python pipeline on 8 held-out photos: same predictions and the same probabilities to three decimal places.
+
+### Build
+
+Requires Node 22+. Put `plant_model.onnx` (from `export_onnx.py`) in `app/public/model/` first.
+
+```bash
+cd app
+npm install
+npm run dev                 # run in a browser
+npm run build && npx cap sync
+npx cap open ios            # or: npx cap open android
+```
+
+### Notes
+
+- The latency shown in the simulator comes from the Mac's processor, so it is not a real phone number. Measure on a real device before quoting a figure.
+- The bundled model is the baseline for now; it will be replaced by the fine-tuned model.
+- The training data is US-centric. It does not cover staples such as rice, wheat or cotton, so local expert review and local-crop data would be needed before real use.
