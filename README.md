@@ -12,6 +12,8 @@
 ![Capacitor](https://img.shields.io/badge/app-Capacitor%20%C2%B7%20iOS%20%26%20Android-119eff?logo=capacitor&logoColor=white)
 ![React](https://img.shields.io/badge/UI-React%2019-61dafb?logo=react&logoColor=white)
 
+**[⬇ Download the Android APK](https://github.com/gangireddymayur/leaflens/releases/latest)** &nbsp;·&nbsp; iOS: build from source (steps below)
+
 <br/>
 
 <img src="docs/screenshots/ios-home.jpg" width="19%" alt="Home screen" />
@@ -49,15 +51,6 @@ It is also a complete machine-learning project in one repository: data preparati
 - **Honest by design:** below 60% confidence the app says it is not sure and shows no advice, and every result carries a limitations note.
 - **Polite permissions:** a friendly pop-up explains why the camera is needed, then the system dialog follows.
 - **Native feel:** dark, glassy interface, safe-area aware, Android back button support and a custom app icon.
-
-## Screenshots
-
-| iPhone | Android |
-|:---:|:---:|
-| <img src="docs/screenshots/ios-home.jpg" width="230" /> <img src="docs/screenshots/ios-result.jpg" width="230" /> | <img src="docs/screenshots/android-home.jpg" width="230" /> <img src="docs/screenshots/android-result.jpg" width="230" /> |
-| <img src="docs/screenshots/ios-about.jpg" width="230" /> <img src="docs/screenshots/ios-permission.jpg" width="230" /> | <img src="docs/screenshots/android-about.jpg" width="230" /> <img src="docs/screenshots/android-permission.jpg" width="230" /> |
-
-*Captured from the iPhone 17 Pro Max simulator and an Android (Pixel) emulator.*
 
 ## How it works
 
@@ -117,6 +110,8 @@ Being straight about limits is part of the project.
 ## Run it
 
 ### 1. The app (the model is included)
+
+**Quickest on Android:** install the APK from the [latest release](https://github.com/gangireddymayur/leaflens/releases/latest). It is a debug-signed build, so Android may ask you to allow installs from your browser or Files app.
 
 Requires Node.js 22 or newer.
 
