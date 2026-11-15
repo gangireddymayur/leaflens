@@ -1,0 +1,90 @@
+{
+  "images": 2572,
+  "skipped_unreadable": 0,
+  "classes": 28,
+  "top1_accuracy": 0.2667185069984448,
+  "top3_accuracy": 0.4727838258164852,
+  "balanced_accuracy": 0.24852182676384835,
+  "healthy_images": 847,
+  "diseased_images": 1725,
+  "healthy_called_healthy": 0.43211334120425027,
+  "healthy_exact_class": 0.16646989374262103,
+  "diseased_called_healthy_(missed)": 0.03710144927536232,
+  "not_sure_rate": 0.5874805598755832,
+  "accuracy_when_confident": 0.3826578699340245,
+  "accuracy_when_not_sure": 0.18530774321641297,
+  "median_confidence_correct": 0.6965034008026123,
+  "median_confidence_wrong": 0.45768722891807556,
+  "per_class_recall": {
+    "Apple___Apple_scab": 0.22580645161290322,
+    "Apple___Cedar_apple_rust": 0.056818181818181816,
+    "Apple___healthy": 0.15384615384615385,
+    "Blueberry___healthy": 0.19130434782608696,
+    "Cherry_(including_sour)___healthy": 0.017543859649122806,
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": 0.8529411764705882,
+    "Corn_(maize)___Common_rust_": 0.20689655172413793,
+    "Corn_(maize)___Northern_Leaf_Blight": 0.25654450261780104,
+    "Grape___Black_rot": 0.484375,
+    "Grape___healthy": 0.5217391304347826,
+    "Peach___healthy": 0.0,
+    "Pepper,_bell___Bacterial_spot": 0.38028169014084506,
+    "Pepper,_bell___healthy": 0.18032786885245902,
+    "Potato___Early_blight": 0.1724137931034483,
+    "Potato___Late_blight": 0.10476190476190476,
+    "Raspberry___healthy": 0.31932773109243695,
+    "Soybean___healthy": 0.0,
+    "Squash___Powdery_mildew": 0.7615384615384615,
+    "Strawberry___healthy": 0.1875,
+    "Tomato___Bacterial_spot": 0.00909090909090909,
+    "Tomato___Early_blight": 0.3409090909090909,
+    "Tomato___Late_blight": 0.7927927927927928,
+    "Tomato___Leaf_Mold": 0.03296703296703297,
+    "Tomato___Septoria_leaf_spot": 0.33774834437086093,
+    "Tomato___Spider_mites Two-spotted_spider_mite": 0.0,
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": 0.35526315789473684,
+    "Tomato___Tomato_mosaic_virus": 0.0,
+    "Tomato___healthy": 0.015873015873015872
+  },
+  "top_confusions": [
+    {
+      "true": "Corn_(maize)___Northern_Leaf_Blight",
+      "predicted": "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+      "count": 98
+    },
+    {
+      "true": "Corn_(maize)___Common_rust_",
+      "predicted": "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+      "count": 71
+    },
+    {
+      "true": "Potato___Late_blight",
+      "predicted": "Tomato___Late_blight",
+      "count": 61
+    },
+    {
+      "true": "Tomato___Leaf_Mold",
+      "predicted": "Tomato___Late_blight",
+      "count": 51
+    },
+    {
+      "true": "Peach___healthy",
+      "predicted": "Strawberry___Leaf_scorch",
+      "count": 44
+    },
+    {
+      "true": "Tomato___Septoria_leaf_spot",
+      "predicted": "Strawberry___Leaf_scorch",
+      "count": 43
+    },
+    {
+      "true": "Potato___Early_blight",
+      "predicted": "Tomato___Late_blight",
+      "count": 41
+    },
+    {
+      "true": "Blueberry___healthy",
+      "predicted": "Strawberry___Leaf_scorch",
+      "count": 40
+    }
+  ]
+}

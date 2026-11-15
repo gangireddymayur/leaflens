@@ -43,6 +43,7 @@ It is also a complete machine-learning project in one repository: data preparati
 | **Data** | PlantVillage, 54,305 images, split 70 / 15 / 15 with a fixed seed |
 | **Test result** | **99.78% accuracy, 99.58% macro-F1** on 8,146 unseen images (18 mistakes) |
 | **Runs on** | iOS, Android and the browser, from one codebase (Capacitor, ONNX Runtime Web) |
+| **Real-world test** | **26.7% top-1, 47.3% top-3** on 2,572 PlantDoc web photos (see [below](#real-world-test-plantdoc)) |
 | **Privacy** | Fully on-device. No network request is made during a scan |
 
 ## What the app does
@@ -94,6 +95,31 @@ Fine-tuning helped most where the baseline struggled. The rare class `Potato · 
 
 The most common mistake of the fine-tuned model is confusing two corn leaf diseases (gray leaf spot predicted as northern leaf blight, 3 images), which look alike even to people.
 
+### Real-world test (PlantDoc)
+
+The 99.8% above is on lab photos. To see what happens on messier pictures, I tested the shipped model on **PlantDoc**: 2,572 photos scraped from the web, in 28 classes that map onto this model's classes (Singh et al., 2020, CC BY 4.0). The model was **only tested** on it, never trained on it.
+
+| Measure | Result |
+|---|---|
+| Top-1 accuracy | **26.7%** |
+| Top-3 accuracy | 47.3% |
+| Balanced accuracy (average over classes) | 24.9% |
+| Healthy leaves called healthy (any crop) | 43.2% of 847 (exact class: 16.6%) |
+| Diseased leaves wrongly called healthy | 3.7% of 1,725 |
+| Photos where the app would say "Not sure" (below 60%) | 58.7% |
+| Accuracy on the photos it was confident about / not sure about | 38.3% / 18.5% |
+
+<p align="center"><img src="docs/real-world-gap.png" width="95%" alt="Lab versus real-world accuracy" /></p>
+
+**What this shows**
+
+- **A large domain gap.** The model learned from clean, plain-background close-ups. Web photos often show several leaves, a whole plant, hands or soil, and the accuracy drops from 99.8% to 26.7%.
+- **It falls back on a few "favourite" answers.** The most common mistakes are corn northern leaf blight and corn common rust predicted as gray leaf spot (98 and 71 photos), and potato late blight predicted as tomato late blight (61 photos; both are caused by the same organism).
+- **The "Not sure" rule helps, but not enough.** It catches 58.7% of these photos, and the answers it lets through are right 38.3% of the time, against 18.5% for the rest. That is better, but still far from reliable.
+- **It rarely mistakes a sick leaf for a healthy one** (3.7%), but healthy leaves are often called diseased.
+
+So treat the app as a **demonstration and a hint, not a diagnosis tool**. PlantDoc is web-scraped, so a few labels may be noisy, and a good close-up taken on a phone should do better than these mixed photos, but I have not measured that. The clear next step is to train with real-world photos and test again on a held-out part of them.
+
 <details>
 <summary>Full confusion matrix</summary>
 <p align="center"><img src="docs/confusion-matrix.png" width="90%" alt="Confusion matrix" /></p>
@@ -103,7 +129,7 @@ The most common mistake of the fine-tuned model is confusing two corn leaf disea
 
 Being straight about limits is part of the project.
 
-- **The score is optimistic.** PlantVillage photos are taken on plain lab backgrounds, and the same leaf can appear in several images, so near-duplicates may sit in both the training and test splits. Real field photos will score lower, and I have **not** measured that yet.
+- **The lab score is optimistic.** PlantVillage photos are taken on plain lab backgrounds, and the same leaf can appear in several images, so near-duplicates may sit in both the training and test splits. On real-world web photos (PlantDoc) the same model scores **26.7%** top-1. Details above.
 - **Only 14 crops and 38 conditions.** It does not cover staples such as rice, wheat or cotton, and any photo that is not a leaf will still get a (meaningless) answer.
 - **Confidence looks modest on purpose.** The model was trained with label smoothing, so even correct predictions show roughly 85 to 92%. That is deliberate, and it avoids overconfident answers.
 - **Speed is not a phone number yet.** Timings in the app (roughly 20 to 65 ms) were measured in simulators on a Mac. A real device needs its own measurement.
@@ -183,6 +209,13 @@ app/                the LeafLens app (React + Capacitor)
 docs/               screenshots and result charts
 ```
 
+## Reproduce the real-world test
+
+```bash
+git clone --depth 1 https://github.com/pratikkayal/PlantDoc-Dataset.git data/raw/plantdoc
+PYTHONPATH=src python -m plantdx.real_world --plantdoc-dir data/raw/plantdoc
+```
+
 ## Tests and CI
 
 ```bash
@@ -195,7 +228,9 @@ CI runs the unit tests and builds the app on every push.
 
 - [x] Training, evaluation and ONNX export with a parity check
 - [x] iOS and Android app with on-device inference and condition guidance
-- [ ] Evaluate on real field photos and report the drop honestly
+- [x] Evaluate on real-world photos (PlantDoc) and report the drop honestly
+- [ ] Train with real-world photos plus stronger augmentation, and re-test on a held-out part
+- [ ] Collect and test on my own phone photos
 - [ ] Measure inference speed on real phones
 - [ ] Evaluate the 4.5 MB int8 model on real images
 - [ ] Add crops common in India (rice, wheat, cotton, chilli) with local data
@@ -204,6 +239,7 @@ CI runs the unit tests and builds the app on every push.
 
 ## Credits
 
+- **PlantDoc** (used for testing only): Singh, Jain, Jain, Kayal, Kumawat and Batra, *PlantDoc: A Dataset for Visual Plant Disease Detection* (CoDS-COMAD 2020), CC BY 4.0.
 - **PlantVillage** dataset: Hughes and Salathé, *An open access repository of images on plant health to enable the development of mobile disease diagnostics* (2015). Trained from a public CC0 copy on Hugging Face.
 - **MobileNetV3**: Howard et al., *Searching for MobileNetV3* (2019), via torchvision.
 - Built with PyTorch, ONNX Runtime, Capacitor, React, Vite and Framer Motion.

@@ -10,3 +10,7 @@ data/
 
 # the one model the app ships with
 !app/public/model/plant_model.onnx
+
+# IDE files
+.idea/
+*.iml
