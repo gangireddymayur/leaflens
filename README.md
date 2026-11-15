@@ -90,7 +90,7 @@ Every photo behind this project comes from **public, openly licensed datasets**.
 | **PlantDoc** | 2,572 real-world photos scraped from the web, 28 class folders (27 classes plus a 2-photo spider-mite folder), 13 crops | [pratikkayal/PlantDoc-Dataset](https://github.com/pratikkayal/PlantDoc-Dataset) (the classification version, about 1 GB) | CC BY 4.0 | Real-world training (60%), validation (20%) and the held-out real-world test (20%) |
 | **ImageNet** | 1.28 million everyday photos in 1,000 classes | Pretrained MobileNetV3-Large weights from torchvision (`MobileNet_V3_Large_Weights.IMAGENET1K_V2`) | See the torchvision and ImageNet terms | The starting point, before any plant data |
 
-**Where the datasets are from.** PlantVillage was released by Hughes and Salathé (2015) so that researchers could build plant-disease tools. PlantDoc was collected by researchers at IIT Gandhinagar and IIT Delhi because PlantVillage's lab photos do not look like real fields. See [Credits](#credits) for the papers.
+**Where the datasets are from.** PlantVillage was released by Hughes and Salathé (2015) so that researchers could build plant-disease tools. PlantDoc was collected by researchers at an Indian Institute of Technology because PlantVillage's lab photos do not look like real fields. See [Credits](#credits) for the papers.
 
 **How they were split.** Both splits use a fixed random seed so every run is repeatable.
 
