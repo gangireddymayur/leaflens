@@ -284,20 +284,6 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 CI runs the unit tests and builds the app on every push.
 
-## Roadmap
-
-- [x] Training, evaluation and ONNX export with a parity check
-- [x] iOS and Android app with on-device inference and condition guidance
-- [x] Evaluate on real-world photos (PlantDoc) and report the drop honestly
-- [x] Train with real-world photos plus stronger augmentation, and re-test on a held-out part (69.3% top-1)
-- [ ] Collect more real-world photos, which is the current limit, including my own phone photos
-- [ ] Verify the 120 Hz setting on a real 120 Hz phone
-- [ ] Measure inference speed on real phones
-- [ ] Evaluate the 4.5 MB int8 model on real images
-- [ ] Add crops common in India (rice, wheat, cotton, chilli) with local data
-- [ ] Regional language support (Telugu, Hindi)
-- [ ] Review the guidance content with an agronomist
-
 ## Credits
 
 - **PlantDoc** (used for testing only): Singh, Jain, Jain, Kayal, Kumawat and Batra, *PlantDoc: A Dataset for Visual Plant Disease Detection* (CoDS-COMAD 2020), CC BY 4.0.
