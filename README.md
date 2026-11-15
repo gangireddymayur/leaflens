@@ -39,11 +39,11 @@ It is also a complete machine-learning project in one repository: data preparati
 | | |
 |---|---|
 | **Task** | Classify a leaf photo into 38 conditions across 14 crops |
-| **Model** | MobileNetV3-Large (ImageNet-pretrained, fine-tuned), 17 MB as ONNX |
-| **Data** | PlantVillage, 54,305 images, split 70 / 15 / 15 with a fixed seed |
-| **Test result** | **99.78% accuracy, 99.58% macro-F1** on 8,146 unseen images (18 mistakes) |
+| **Model** | MobileNetV3-Large (ImageNet-pretrained, fine-tuned on lab and real-world photos), 17 MB as ONNX |
+| **Data** | PlantVillage (54,305 lab photos) plus PlantDoc (2,572 real-world web photos), with fixed-seed splits |
+| **Test result** | **Lab photos: 99.1%.** **Real-world photos: 69.3% top-1, 89.5% top-3** on 514 held-out PlantDoc photos |
 | **Runs on** | iOS, Android and the browser, from one codebase (Capacitor, ONNX Runtime Web) |
-| **Real-world test** | **26.7% top-1, 47.3% top-3** on 2,572 PlantDoc web photos (see [below](#real-world-test-plantdoc)) |
+| **Before real-world training** | The lab-trained model scored only 26.7% on PlantDoc web photos, which is why the model was retrained (see [below](#real-world-test-plantdoc)) |
 | **Privacy** | Fully on-device. No network request is made during a scan |
 
 ## What the app does
@@ -52,6 +52,8 @@ It is also a complete machine-learning project in one repository: data preparati
 - **Clear result:** the crop, the condition, a confidence ring and the next two possibilities.
 - **About this condition:** for each of the 26 diseases, what causes it, how it spreads, what to look for, and general steps to manage it.
 - **Honest by design:** below 60% confidence the app says it is not sure and shows no advice, and every result carries a limitations note.
+- **Download report:** one tap makes a one-page PDF of the scan (photo, result, guidance and limitations). It is built on the phone and handed to the system share sheet, so you choose where it goes.
+- **Smooth on fast screens:** the app asks for the display's highest refresh rate (120 Hz where available). The setting is in place, but I have not yet verified it on a 120 Hz phone.
 - **Polite permissions:** a friendly pop-up explains why the camera is needed, then the system dialog follows.
 - **Native feel:** dark, glassy interface, safe-area aware, Android back button support and a custom app icon.
 
@@ -97,28 +99,41 @@ The most common mistake of the fine-tuned model is confusing two corn leaf disea
 
 ### Real-world test (PlantDoc)
 
-The 99.8% above is on lab photos. To see what happens on messier pictures, I tested the shipped model on **PlantDoc**: 2,572 photos scraped from the web, in 28 classes that map onto this model's classes (Singh et al., 2020, CC BY 4.0). The model was **only tested** on it, never trained on it.
+The 99.8% above is on lab photos. To see what happens on messier pictures, I tested the model on **PlantDoc**: 2,572 photos scraped from the web, in 28 classes that map onto this model's classes (Singh et al., 2020, CC BY 4.0).
+
+**Step 1: the lab-trained model fell apart.** It scored **26.7%** top-1 and 47.3% top-3. It had learned plain-background cues, and it kept falling back on a few "favourite" answers.
+
+**Step 2: train on real-world photos too.** PlantDoc was split once, with a fixed seed, into **1,544 photos to train on, 514 to pick the best epoch and 514 locked away for the final score**. The model was continued from the lab-trained one on a mix: every real-world training photo three times per epoch with heavy augmentation (crops, rotation, blur, colour shifts, random erasing), plus 8,000 fresh lab photos per epoch.
+
+| Experiment | PlantDoc held-out top-1 | Top-3 | Lab top-1 | Training time |
+|---|---|---|---|---|
+| Lab-trained only (the earlier model) | 26.7% * | 47.3% * | 99.8% | 23 min |
+| **MobileNetV3, mixed training (shipped)** | **69.3%** | **89.5%** | 99.1% | 14 min |
+| EfficientNet-B0, mixed training | 70.2% | 87.4% | 99.2% | 27 min |
+| MobileNetV3 with the whole image squeezed to 224 px | 66.7% | 87.2% | n/a | n/a |
+
+<sub>* measured on all 2,572 PlantDoc photos (none of which that model had seen).</sub>
+
+**I stopped here on purpose.** Validation accuracy rose quickly, then stayed between 70% and 72% for most of the run. A bigger backbone (EfficientNet-B0) landed in the same place, and the gap between the two is smaller than the test's own margin of error (about 4 points on 514 photos). When two different models stop at the same score, the limit is the **amount and quality of real-world training photos** (only 1,544), not the model. More real-world photos is what would move it next.
+
+<p align="center"><img src="docs/real-world-gap.png" width="95%" alt="Effect of real-world training" /></p>
+
+**What the shipped model does on the 514 held-out real-world photos**
 
 | Measure | Result |
 |---|---|
-| Top-1 accuracy | **26.7%** |
-| Top-3 accuracy | 47.3% |
-| Balanced accuracy (average over classes) | 24.9% |
-| Healthy leaves called healthy (any crop) | 43.2% of 847 (exact class: 16.6%) |
-| Diseased leaves wrongly called healthy | 3.7% of 1,725 |
-| Photos where the app would say "Not sure" (below 60%) | 58.7% |
-| Accuracy on the photos it was confident about / not sure about | 38.3% / 18.5% |
+| Top-1 / top-3 accuracy | **69.3%** / **89.5%** |
+| Healthy leaves called healthy (any crop / exact class) | 90.5% / 80.5% of 169 |
+| Diseased leaves wrongly called healthy | 4.3% of 345 |
+| Photos where the app says "Not sure" (below 60%) | 31.1% |
+| Accuracy on the answers it gives / on the "Not sure" ones | **81.1%** / 43.1% |
+| Median confidence when right / when wrong | 84% / 55% |
 
-<p align="center"><img src="docs/real-world-gap.png" width="95%" alt="Lab versus real-world accuracy" /></p>
+- **Better, still not reliable.** About 7 in 10 photos are named correctly and the right answer is in the top 3 for about 9 in 10. When the app commits to an answer, it is right about 8 times in 10, and it says "Not sure" instead of guessing on the rest.
+- **Weak spots remain.** Per class, Tomato bacterial spot (9%), corn gray leaf spot (21%) and tomato early blight (33%) are still often missed.
+- **Caveats.** The test is small (about 19 photos per class). It is the same kind of photo as the training set (web images), so a phone photo of a real plant may behave differently, and I have not measured that. PlantDoc is web-scraped, so a few labels may be noisy.
 
-**What this shows**
-
-- **A large domain gap.** The model learned from clean, plain-background close-ups. Web photos often show several leaves, a whole plant, hands or soil, and the accuracy drops from 99.8% to 26.7%.
-- **It falls back on a few "favourite" answers.** The most common mistakes are corn northern leaf blight and corn common rust predicted as gray leaf spot (98 and 71 photos), and potato late blight predicted as tomato late blight (61 photos; both are caused by the same organism).
-- **The "Not sure" rule helps, but not enough.** It catches 58.7% of these photos, and the answers it lets through are right 38.3% of the time, against 18.5% for the rest. That is better, but still far from reliable.
-- **It rarely mistakes a sick leaf for a healthy one** (3.7%), but healthy leaves are often called diseased.
-
-So treat the app as a **demonstration and a hint, not a diagnosis tool**. PlantDoc is web-scraped, so a few labels may be noisy, and a good close-up taken on a phone should do better than these mixed photos, but I have not measured that. The clear next step is to train with real-world photos and test again on a held-out part of them.
+Treat the app as a **hint, not a diagnosis**.
 
 <details>
 <summary>Full confusion matrix</summary>
@@ -129,10 +144,11 @@ So treat the app as a **demonstration and a hint, not a diagnosis tool**. PlantD
 
 Being straight about limits is part of the project.
 
-- **The lab score is optimistic.** PlantVillage photos are taken on plain lab backgrounds, and the same leaf can appear in several images, so near-duplicates may sit in both the training and test splits. On real-world web photos (PlantDoc) the same model scores **26.7%** top-1. Details above.
+- **The lab score is optimistic.** PlantVillage photos are taken on plain lab backgrounds, and the same leaf can appear in several images, so near-duplicates may sit in both the training and test splits. On real-world web photos the lab-trained model scored 26.7%; after training on real-world photos too, the shipped model scores 69.3% on held-out ones. Details above.
+- **The real-world number comes from a small test** (514 photos, about 4 points of margin) of the same kind of photo it trained on. Phone photos of real plants may differ.
 - **Only 14 crops and 38 conditions.** It does not cover staples such as rice, wheat or cotton, and any photo that is not a leaf will still get a (meaningless) answer.
 - **Confidence looks modest on purpose.** The model was trained with label smoothing, so even correct predictions show roughly 85 to 92%. That is deliberate, and it avoids overconfident answers.
-- **Speed is not a phone number yet.** Timings in the app (roughly 20 to 65 ms) were measured in simulators on a Mac. A real device needs its own measurement.
+- **Speed is not a phone number yet.** Timings in the app were about 20 ms in a Mac simulator and 60 ms on one real Android phone (a single measurement). More devices are needed before quoting a speed.
 - **The guidance is general information, not advice.** It is written from standard plant-pathology references and should be reviewed by an agricultural expert before real use.
 
 ## Run it
@@ -209,11 +225,18 @@ app/                the LeafLens app (React + Capacitor)
 docs/               screenshots and result charts
 ```
 
-## Reproduce the real-world test
+## Reproduce the real-world work
 
 ```bash
 git clone --depth 1 https://github.com/pratikkayal/PlantDoc-Dataset.git data/raw/plantdoc
-PYTHONPATH=src python -m plantdx.real_world --plantdoc-dir data/raw/plantdoc
+export PYTHONPATH=src
+
+# train on lab + real-world photos (continues from the lab-trained model)
+python -m plantdx.mixed --init runs/finetune/best.pt --out-dir runs/mixed_mnv3 --epochs 12
+python -m plantdx.export_onnx --checkpoint runs/mixed_mnv3/best.pt --out-dir app/public/model
+
+# score only the held-out real-world photos with the shipped ONNX model
+python -m plantdx.real_world --plantdoc-dir data/raw/plantdoc --split-file runs/mixed_mnv3/plantdoc_split.json
 ```
 
 ## Tests and CI
@@ -229,8 +252,9 @@ CI runs the unit tests and builds the app on every push.
 - [x] Training, evaluation and ONNX export with a parity check
 - [x] iOS and Android app with on-device inference and condition guidance
 - [x] Evaluate on real-world photos (PlantDoc) and report the drop honestly
-- [ ] Train with real-world photos plus stronger augmentation, and re-test on a held-out part
-- [ ] Collect and test on my own phone photos
+- [x] Train with real-world photos plus stronger augmentation, and re-test on a held-out part (69.3% top-1)
+- [ ] Collect more real-world photos, which is the current limit, including my own phone photos
+- [ ] Verify the 120 Hz setting on a real 120 Hz phone
 - [ ] Measure inference speed on real phones
 - [ ] Evaluate the 4.5 MB int8 model on real images
 - [ ] Add crops common in India (rice, wheat, cotton, chilli) with local data

@@ -65,12 +65,16 @@ def main():
     ap.add_argument("--plantdoc-dir", required=True)
     ap.add_argument("--model", default="app/public/model/plant_model.onnx")
     ap.add_argument("--labels", default="app/public/model/labels.json")
+    ap.add_argument("--split-file", default="", help="JSON with a \"test\" list of image paths: score only those held-out photos")
     ap.add_argument("--out", default="docs/real_world_results.json")
     args = ap.parse_args()
 
     labels = json.load(open(args.labels))
     idx = {n: i for i, n in enumerate(labels)}
     items = collect(args.plantdoc_dir)
+    if args.split_file:
+        keep = set(json.load(open(args.split_file))["test"])
+        items = [it for it in items if it[0] in keep]
     sess = ort.InferenceSession(args.model, providers=["CPUExecutionProvider"])
     tf = eval_transform()
 

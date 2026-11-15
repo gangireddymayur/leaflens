@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Image as ImageIcon, Leaf, ShieldCheck, WifiOff, Cpu, RotateCcw, AlertTriangle, CheckCircle2, Sparkles, Bug, Share2, Eye, Wrench, ChevronLeft } from 'lucide-react';
+import { Camera, Image as ImageIcon, Leaf, ShieldCheck, WifiOff, Cpu, RotateCcw, AlertTriangle, CheckCircle2, Sparkles, Bug, Share2, Eye, Wrench, ChevronLeft, Download } from 'lucide-react';
 import { classify, loadModel } from './lib/classifier.js';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { askPermission, deniedMessage, friendlyError, getPermission, takePhoto } from './lib/capture.js';
 import { HEALTHY_TIPS, knowledgeFor } from './lib/knowledge.js';
+import { downloadReport } from './lib/report.js';
 
 const BASE = import.meta.env.BASE_URL;
 const SAMPLES = [
@@ -87,7 +88,7 @@ function Home({ onPick, onSample, modelState }) {
 
       <div className="hero">
         <h1>Know your plant's health <em>in a snap.</em></h1>
-        <p className="lead">Point your camera at a leaf. A model trained on 54,000 leaf photos checks it right on your phone.</p>
+        <p className="lead">Point your camera at a leaf. A model trained on lab and real-world leaf photos checks it right on your phone.</p>
       </div>
 
       <div className="chips">
@@ -189,7 +190,22 @@ function About({ best }) {
 
 function Result({ image, result, onReset }) {
   const [best, ...others] = result.top;
+  const [saving, setSaving] = useState(false);
+  const [reportNote, setReportNote] = useState('');
   const unsure = best.probability < 0.6;
+
+  const saveReport = async () => {
+    setSaving(true);
+    setReportNote('');
+    try {
+      const how = await downloadReport({ image, result });
+      setReportNote(how === 'saved' ? 'Report downloaded.' : '');
+    } catch (e) {
+      setReportNote(e?.message ?? 'Could not create the report.');
+    } finally {
+      setSaving(false);
+    }
+  };
   const healthy = best.healthy && !unsure;
   return (
     <motion.main className="screen result" {...screenMotion}>
@@ -232,8 +248,12 @@ function Result({ image, result, onReset }) {
         <span><Cpu size={13} /> {Math.round(result.ms)} ms on this device</span>
         <span><WifiOff size={13} /> No internet used</span>
       </div>
-      <p className="disclaimer">Learning project, not agronomic advice. The model only knows 38 leaf conditions across 14 crops and was trained on lab photos, so real-field accuracy will be lower. Photos of anything other than a leaf are unreliable.</p>
+      <p className="disclaimer">Learning project, not agronomic advice. In a test on real-world web photos the top answer was right about 7 times in 10, and the right answer was in the top 3 about 9 times in 10. It only knows 38 conditions across 14 crops, and photos of anything other than a leaf are unreliable.</p>
 
+      <button className="btn ghost" onClick={saveReport} disabled={saving}>
+        <Download size={18} /> {saving ? 'Preparing report…' : 'Download report'}
+      </button>
+      {reportNote && <p className="report-note">{reportNote}</p>}
       <button className="btn primary" onClick={onReset}><RotateCcw size={18} /> Scan another leaf</button>
     </motion.main>
   );
