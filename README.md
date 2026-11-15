@@ -40,7 +40,7 @@ It is also a complete machine-learning project in one repository: data preparati
 |---|---|
 | **Task** | Classify a leaf photo into 38 conditions across 14 crops |
 | **Model** | MobileNetV3-Large (ImageNet-pretrained, fine-tuned on lab and real-world photos), 17 MB as ONNX |
-| **Data** | PlantVillage (54,305 lab photos) plus PlantDoc (2,572 real-world web photos), with fixed-seed splits |
+| **Data** | PlantVillage (54,305 lab photos) plus PlantDoc (2,572 real-world web photos), with fixed-seed splits. [Sources and licences](#data) |
 | **Test result** | **Lab photos: 99.1%.** **Real-world photos: 69.3% top-1, 89.5% top-3** on 514 held-out PlantDoc photos |
 | **Runs on** | iOS, Android and the browser, from one codebase (Capacitor, ONNX Runtime Web) |
 | **Before real-world training** | The lab-trained model scored only 26.7% on PlantDoc web photos, which is why the model was retrained (see [below](#real-world-test-plantdoc)) |
@@ -79,6 +79,43 @@ flowchart LR
 3. **Ship** the model inside the app. The app prepares each photo exactly the way training did, runs the model locally and shows the result.
 
 The app's JavaScript image preparation was checked against the Python pipeline on 8 held-out photos: identical predictions and the same probabilities to three decimal places.
+
+## Data
+
+Every photo behind this project comes from **public, openly licensed datasets**. No photos of my own, and no data from any employer or client, were used.
+
+| Dataset | What it is | Where I got it | Licence | How it was used |
+|---|---|---|---|---|
+| **PlantVillage** | 54,305 lab photos of single leaves on plain backgrounds, 38 classes (14 crops) | [Hugging Face copy, `BrandonFors/Plant-Diseases-PlantVillage-Dataset`](https://huggingface.co/datasets/BrandonFors/Plant-Diseases-PlantVillage-Dataset) (parquet files, 852 MB). Original project: [spMohanty/PlantVillage-Dataset](https://github.com/spMohanty/PlantVillage-Dataset) | CC0, as stated on that copy's dataset card | Training (70%), validation (15%) and the lab test split (15%) |
+| **PlantDoc** | 2,572 real-world photos scraped from the web, 28 class folders (27 classes plus a 2-photo spider-mite folder), 13 crops | [pratikkayal/PlantDoc-Dataset](https://github.com/pratikkayal/PlantDoc-Dataset) (the classification version, about 1 GB) | CC BY 4.0 | Real-world training (60%), validation (20%) and the held-out real-world test (20%) |
+| **ImageNet** | 1.28 million everyday photos in 1,000 classes | Pretrained MobileNetV3-Large weights from torchvision (`MobileNet_V3_Large_Weights.IMAGENET1K_V2`) | See the torchvision and ImageNet terms | The starting point, before any plant data |
+
+**Where the datasets are from.** PlantVillage was released by Hughes and Salathé (2015) so that researchers could build plant-disease tools. PlantDoc was collected by researchers at IIT Gandhinagar and IIT Delhi because PlantVillage's lab photos do not look like real fields. See [Credits](#credits) for the papers.
+
+**How they were split.** Both splits use a fixed random seed so every run is repeatable.
+
+| | Train | Validation | Test |
+|---|---|---|---|
+| PlantVillage (seed 42) | 38,013 | 8,146 | 8,146 |
+| PlantDoc (seed 1234, stratified by class) | 1,544 | 514 | 514 |
+
+The real-world training run also showed each PlantDoc training photo three times per epoch, mixed with 8,000 fresh PlantVillage photos. The PlantDoc test photos were never used for training or for choosing an epoch. The list of exactly which photos went into each PlantDoc split is in [`docs/plantdoc_split.json`](docs/plantdoc_split.json).
+
+**Other content that is not from a dataset.** The 8 sample leaves inside the app are PlantVillage test-split photos. The "About this condition" guidance was written by me from general plant-pathology knowledge, not taken from a dataset, and it has not been reviewed by an agronomist.
+
+**Getting the data yourself.** The photos are not stored in this repository.
+
+```bash
+# PlantVillage: download the three parquet files, then turn them into class folders
+BASE=https://huggingface.co/datasets/BrandonFors/Plant-Diseases-PlantVillage-Dataset/resolve/main/data
+mkdir -p data/raw/hf && cd data/raw/hf
+for f in test-00000-of-00001 train-00000-of-00002 train-00001-of-00002; do curl -L -O "$BASE/$f.parquet"; done
+cd ../../..
+PYTHONPATH=src python -m plantdx.prepare_data --parquet-dir data/raw/hf --out-dir data/plantvillage
+
+# PlantDoc
+git clone --depth 1 https://github.com/pratikkayal/PlantDoc-Dataset.git data/raw/plantdoc
+```
 
 ## Results
 
